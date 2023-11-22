@@ -1,0 +1,59 @@
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.datasets 
+import make_blobs
+
+# Generate a synthetic dataset with 3 clusters
+data, true_labels = make_blobs(n_samples=300, centers=3, random_state=0, cluster_std=0.60)
+
+def kmeans(X, n_clusters, max_iterations=100):
+	# Initialize centroids randomly
+	centroids = X[np.random.choice(X.shape[0], n_clusters, replace=False)]
+	for _ in range(max_iterations):
+
+	   # Assign each data point to the nearest centroid
+	   labels = np.argmin(np.linalg.norm(X[:, np.newaxis] -centroids, axis=2), axis=1)
+           
+           # Update centroids
+           new_centroids = np.array([X[labels == i].mean(axis=0) for i in range(n_clusters)])
+
+           # Checkfor convergence
+           if np.all(centroids == new_centroids):
+                break
+
+           centroids = new_centroids
+
+ return centroids, labels
+
+
+# Plot the dataset
+plt.scatter(data[:, 0], data[:, 1], s=50)
+plt.title("Synthetic Dataset")
+plt.xlabel("Feature 1")
+plt.ylabel("Feature 2")
+
+# Plot the initial centroids
+initial_centroids, _ = kmeans(data, n_clusters=3)
+plt.scatter(initial_centroids[:, 0], initial_centroids[:, 1], c='red', marker='X', s=200, label="Initial Centroids")
+plt.legend()
+plt.show()
+
+
+def calculate_inertia(X, centroids, labels):
+  inertia = 0
+  for i in range(len(centroids)):inertia += np.sum((X[labels == i] -centroids[i])**2)
+return inertia
+
+k_values = range(1, 11)
+inertia_values = []
+for k in k_values:
+  _, labels = kmeans(data, n_clusters=k)
+  inertia = calculate_inertia(data, initial_centroids, labels)
+  inertia_values.append(inertia)
+
+# Plot the inertia values for different K
+plt.plot(k_values, inertia_values, marker='o')
+plt.title("Inertia vs. Number of Clusters (K)")
+plt.xlabel("Number of Clusters (K)")
+plt.ylabel("Inertia")
+plt.xticks(k_values)plt.show()

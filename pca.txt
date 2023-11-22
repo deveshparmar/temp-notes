@@ -1,0 +1,91 @@
+#pca
+
+import pandas as pd
+
+# Load the dataset
+creditcard_df = pd.read_csv(r"C:\Users\devesh\Downloads\creditcard.csv")
+
+# Explore the dataset
+creditcard_df.head(), creditcard_df.shape
+
+from sklearn.preprocessing import StandardScaler
+
+# Separate features and target
+X = creditcard_df.drop("Class", axis=1)
+y = creditcard_df["Class"]
+
+# Standardize the features
+scaler = StandardScaler()
+X_standardized = scaler.fit_transform(X)
+X_standardized[:5]  
+
+import numpy as np
+from sklearn.decomposition import PCA
+import matplotlib.pyplot as plt
+
+# Perform PCA
+pca = PCA()
+pca.fit(X_standardized)
+
+# Get explained variance ratios
+explained_variance = pca.explained_variance_ratio_
+
+# Visualize the explained variance
+plt.figure(figsize=(10,6))
+plt.plot(np.cumsum(explained_variance), marker='o', linestyle='--')
+plt.xlabel('Number of Components')plt.ylabel('Cumulative Explained Variance')plt.title('Explained Variance by Components')
+plt.grid(True)
+plt.show()
+
+# Reduce dimensionality using PCA with 10 components
+pca_10 = PCA(n_components=10)
+X_pca= pca_10.fit_transform(X_standardized)
+X_pca.shape  
+
+# Visualize the dataset before and after PCA
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(15, 6))
+
+# Original dataset (first two features)
+ax1.scatter(X_standardized[y==0][:, 0], X_standardized[y==0][:, 1], color='blue', alpha=0.5, label='Non-Fraudulent')
+ax1.scatter(X_standardized[y==1][:,0], X_standardized[y==1][:, 1], color='red', alpha=0.5, label='Fraudulent')
+ax1.set_title('Original Dataset (First two features)')
+ax1.set_xlabel('Feature 1')ax1.set_ylabel('Feature 2')
+ax1.legend()
+
+# Dataset after PCA (first two principal components)
+ax2.scatter(X_pca[y==0][:, 0], X_pca[y==0][:, 1], color='blue', alpha=0.5, label='Non-Fraudulent')
+ax2.scatter(X_pca[y==1][:, 0], X_pca[y==1][:, 1], color='red', alpha=0.5, label='Fraudulent')
+ax2.set_title('PCA (First two principal components)')ax2.set_xlabel('Principal Component 1')
+ax2.set_ylabel('Principal Component 2')
+ax2.legend()
+plt.tight_layout()
+plt.show()
+
+
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, f1_score
+
+# Split the original and reduced datasets
+X_train, X_test, y_train, y_test = train_test_split(X_standardized, y, test_size=0.2, random_state=42)
+
+X_train_pca, X_test_pca, y_train_pca, y_test_pca = train_test_split(X_pca, y, test_size=0.2, random_state=42)
+
+# Train logistic regression on the original dataset
+clf_original = LogisticRegression(max_iter=1000, random_state=42)
+clf_original.fit(X_train, y_train)
+y_pred_original = clf_original.predict(X_test)
+
+# Train logistic regression on the reduced dataset
+clf_pca = LogisticRegression(max_iter=1000, random_state=42)
+clf_pca.fit(X_train_pca, y_train_pca)
+y_pred_pca = clf_pca.predict(X_test_pca)
+
+# Evaluate performance
+accuracy_original = accuracy_score(y_test, y_pred_original)
+f1_original = f1_score(y_test, y_pred_original)
+accuracy_pca = accuracy_score(y_test_pca, y_pred_pca)
+f1_pca = f1_score(y_test_pca, y_pred_pca)
+accuracy_original, f1_original, accuracy_pca, f1_pca
+
+

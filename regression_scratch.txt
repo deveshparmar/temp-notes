@@ -1,0 +1,134 @@
+#import libraries
+%matplotlib inline
+import numpy as np
+import matplotlib.pyplot as plt
+import pandas as pd
+dataset = pd.read_csv('dataset.csv')
+print(dataset.shape)
+dataset.head()
+
+# initializing our inputs and outputs
+X = dataset['Head Size(cm^3)'].values
+Y = dataset['Brain Weight(grams)'].values
+# mean of our inputs and outputs
+x_mean = np.mean(X)
+y_mean = np.mean(Y)
+#total number of values
+n = len(X)
+# using the formula to calculate the b1 and b0
+numerator = 0
+denominator = 0
+for i in range(n):
+    numerator += (X[i] - x_mean) * (Y[i] - y_mean)
+    denominator += (X[i] - x_mean) ** 2
+    
+b1 = numerator / denominator
+b0 = y_mean - (b1 * x_mean)
+#printing the coefficient
+print(b1, b0)
+
+#plotting values 
+x_max = np.max(X) + 100
+x_min = np.min(X) - 100
+#calculating line values of x and y
+x = np.linspace(x_min, x_max, 1000)
+y = b0 + b1 * x
+#plotting line 
+plt.plot(x, y, color='#00ff00', label='Linear Regression')
+#plot the data point
+plt.scatter(X, Y, color='#ff0000', label='Data Point')
+# x-axis label
+plt.xlabel('Head Size (cm^3)')
+#y-axis label
+plt.ylabel('Brain Weight (grams)')
+plt.legend()
+
+rmse = 0
+for i in range(n):
+    y_pred=  b0 + b1* X[i]
+    rmse += (Y[i] - y_pred) ** 2
+    
+rmse = np.sqrt(rmse/n)
+print(rmse)
+
+sumofsquares = 0
+sumofresiduals = 0
+for i in range(n) :
+    y_pred = b0 + b1 * X[i]
+    sumofsquares += (Y[i] - y_mean) ** 2
+    sumofresiduals += (Y[i] - y_pred) **2
+    
+score  = 1 - (sumofresiduals/sumofsquares)
+print(score)
+
+
+
+
+
+
+# multiple regression
+
+import numpy as np
+import pandas as pd
+import matplotlib.pyplot as plt
+from sklearn.model_selection import train_test_split
+
+df = pd.read_csv("50_Startups.csv")
+
+x = df.iloc[:,:-1].values
+y = df.iloc[:,-1].values
+
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder
+ct = ColumnTransformer(transformers=[('encoder', OneHotEncoder(), [3])], remainder='passthrough')
+x = np.array(ct.fit_transform(x))
+
+
+from sklearn.preprocessing import StandardScaler
+sc = StandardScaler()
+x = sc.fit_transform(x)
+
+Xtrain, Xtest, Ytrain, Ytest = train_test_split( x, y, test_size = 0.3,random_state=42)
+
+def CostFunction(x,y,w,b):
+    cost = np.sum((((x.dot(w) + b) - y) ** 2) / (2*len(y)))
+    return cost
+
+def GradientDescent(x, y, w, b, learning_rate, epochs):
+    cost_list = [0] * epochs
+   
+    for epoch in range(epochs):
+        z = x.dot(w) + b
+        loss = z - y
+        
+        weight_gradient = x.T.dot(loss) / len(y)
+        bias_gradient = np.sum(loss) / len(y)
+        
+        w = w - learning_rate*weight_gradient
+        b = b - learning_rate*bias_gradient
+  
+        cost = CostFunction(x, y, w, b)
+        cost_list[epoch] = cost
+        
+        if (epoch%(epochs/10)==0):
+            print("Cost is:",cost)
+        
+    return w, b, cost_list
+
+
+w, b, c= GradientDescent(Xtrain, Ytrain, np.zeros(Xtrain.shape[1]), 0, 0.002,epochs=15000)
+
+plt.plot(c)
+
+def predict(X, w, b):
+    return X.dot(w) + b
+y_pred = predict(Xtest, w, b)
+
+
+def r2score(y_pred, y):
+    rss = np.sum((y_pred - y) ** 2)
+    tss = np.sum((y-y.mean()) ** 2)
+    
+    r2 = 1 - (rss / tss)
+    return r2
+r2score(y_pred, Ytest)

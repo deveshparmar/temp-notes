@@ -1,0 +1,222 @@
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+# Load the Iris dataset
+from sklearn.datasets import load_iris
+# Load the datairis_data = load_iris()
+iris_df = pd.DataFrame(iris_data.data, columns=iris_data.feature_names)
+iris_df['species'] = iris_data.target
+
+# Show basic statistics
+iris_stats = iris_df.describe()
+
+# Plot pairplot for visualization
+sns.pairplot(iris_df, hue='species', markers=["o", "s", "D"])
+plt.suptitle('Pairplot of Iris Dataset', y=1.02)
+plt.show()
+iris_stats
+
+
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import accuracy_score
+
+# Prepare the data
+X = iris_df.iloc[:, :-1]  
+
+# Featuresy = iris_df.iloc[:, -1]  
+
+# Target# Split the data into training and test sets
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+
+# Initialize the base estimator
+base_estimator = LogisticRegression()
+
+# Initialize RFE
+rfe = RFE(estimator=base_estimator, n_features_to_select=3)
+
+# Fit RFE
+rfe = rfe.fit(X_train, y_train)
+
+# Select important features based on RFE
+X_train_rfe = rfe.transform(X_train)
+X_test_rfe = rfe.transform(X_test)
+
+# Train a classifier on the selected features
+clf_rfe = LogisticRegression()
+clf_rfe = clf_rfe.fit(X_train_rfe, y_train)
+
+# Evaluate the classifier
+y_pred_rfe = clf_rfe.predict(X_test_rfe)
+accuracy_rfe = accuracy_score(y_test, y_pred_rfe)
+
+# Results
+selected_features_rfe = X.columns[rfe.support_].tolist()selected_features_rfe, accuracy_rfe
+
+
+
+
+from sklearn.ensemble import RandomForestClassifier
+import numpy as np
+
+# Initialize Random Forest Classifier
+rf_clf = RandomForestClassifier(n_estimators=100, random_state=42)
+
+# Fit the modelrf_clf.fit(X_train, y_train)
+
+# Get feature importances
+feature_importances = rf_clf.feature_importances_
+
+# Sort feature importances in descending order and get the indices
+sorted_idx = np.argsort(feature_importances)[::-1]
+
+# Select top 3 important features
+top_indices = sorted_idx[:3]
+
+# Train a classifier on the selected features
+X_train_rf = X_train.iloc[:, top_indices]
+X_test_rf = X_test.iloc[:, top_indices]
+clf_rf = LogisticRegression()clf_rf.fit(X_train_rf, y_train)
+
+# Evaluate the classifier
+y_pred_rf = clf_rf.predict(X_test_rf)
+accuracy_rf = accuracy_score(y_test, y_pred_rf)
+
+# Results
+selected_features_rf = X.columns[top_indices].tolist()
+selected_features_rf, accuracy_rf
+
+
+# Compute Pearson correlation matrix
+correlation_matrix = iris_df.corr()
+
+# Get the correlation of all features with respect to the target variable ('species')
+correlation_with_target = correlation_matrix["species"].sort_values(ascending=False)
+
+# Select top 3 correlated features
+top_correlated_features = correlation_with_target.index[1:4].tolist()
+
+# Train a classifier on the selected features
+X_train_corr = X_train[top_correlated_features]
+X_test_corr = X_test[top_correlated_features]
+clf_corr = LogisticRegression()clf_corr.fit(X_train_corr, y_train)
+
+# Evaluate the classifier
+y_pred_corr = clf_corr.predict(X_test_corr)
+accuracy_corr = accuracy_score(y_test, y_pred_corr)
+# Results
+top_correlated_features, accuracy_corr
+
+
+
+
+
+
+## classificATION
+
+# Import necessary libraries and reload the uploaded Boston Housing dataset
+import pandas as pd
+
+# Load the dataset
+boston_df = pd.read_csv(r"C:\Users\meet1\Downloads\archive1\HousingData.csv")
+
+# Show basic statistics and first few rows to understand its structure
+boston_stats = boston_df.describe()
+boston_df.head(), boston_stats
+
+# Plot pairplot for a subset of features for visualization (plotting all would be too many)selected_columns = ['RM', 'AGE', 'TAX', 'LSTAT', 'MEDV']sns.pairplot(boston_df[selected_columns])
+plt.suptitle('Pairplot  of  Selected  Features  from  Boston  Housing  Dataset', y=1.02)plt.show()
+boston_stats
+
+boston_df = boston_df.fillna(boston_df.mean())
+
+# Confirm that there are no more missing values
+missing_values_count = boston_df.isnull().sum().sum()
+missing_values_count
+
+from sklearn.feature_selection import RFE
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+from math import sqrt
+
+# Prepare the data
+X_boston = boston_df.iloc[:, :-1]  
+
+y_boston = boston_df.iloc[:, -1]  
+
+# Split the data into training and test sets
+X_train_boston,    X_test_boston,    y_train_boston,    y_test_boston    = train_test_split(X_boston, y_boston, test_size=0.3, random_state=42)
+
+# Initialize the base estimatorbase_estimator_boston = LinearRegression()
+
+# Initialize RFErfe_boston = RFE(estimator=base_estimator_boston, n_features_to_select=5)
+
+# Fit RFErfe_boston = rfe_boston.fit(X_train_boston, y_train_boston)# Select important features based on RFE
+
+X_train_rfe_boston = rfe_boston.transform(X_train_boston)
+X_test_rfe_boston = rfe_boston.transform(X_test_boston)
+
+# Train a regressor on the selected features
+reg_rfe = LinearRegression()
+reg_rfe = reg_rfe.fit(X_train_rfe_boston, y_train_boston)
+
+# Evaluate the regressor
+y_pred_rfe_boston = reg_rfe.predict(X_test_rfe_boston)
+rmse_rfe= sqrt(mean_squared_error(y_test_boston, y_pred_rfe_boston))
+
+
+selected_features_rfe_boston = X_boston.columns[rfe_boston.support_].tolist()selected_features_rfe_boston, rmse_rfe
+
+
+
+from sklearn.ensemble import RandomForestRegressor
+
+# Initialize Random Forest Regressor
+rf_reg = RandomForestRegressor(n_estimators=100, random_state=42)
+
+# Fit the model
+rf_reg.fit(X_train_boston, y_train_boston)
+
+# Get feature importances
+feature_importances_boston = rf_reg.feature_importances_
+
+# Sort feature importances in descending order and get the indices
+sorted_idx_boston = np.argsort(feature_importances_boston)[::-1]
+
+# Select top 5 important features
+top_indices_boston = sorted_idx_boston[:5]
+
+# Train a regressor on the selected features
+X_train_rf_boston = X_train_boston.iloc[:, top_indices_boston]
+X_test_rf_boston = X_test_boston.iloc[:, top_indices_boston]
+reg_rf = LinearRegression()
+reg_rf.fit(X_train_rf_boston, y_train_boston)
+
+# Evaluate the regressor
+y_pred_rf_boston = reg_rf.predict(X_test_rf_boston)rmse_rf = sqrt(mean_squared_error(y_test_boston, y_pred_rf_boston))
+
+# Results
+selected_features_rf_boston = X_boston.columns[top_indices_boston].tolist()selected_features_rf_boston, rmse_rf
+
+
+# Compute Pearson correlation matrix for Boston Housing dataset
+correlation_matrix_boston = boston_df.corr()
+
+# Get the correlation of all features with respect to the target variable ('MEDV')correlation_with_target_boston = correlation_matrix_boston["MEDV"].sort_values(ascending=False)
+
+# Select top 5 correlated features
+top_correlated_features_boston = correlation_with_target_boston.index[1:6].tolist()
+
+# Train a regressor on the selected features
+X_train_corr_boston = X_train_boston[top_correlated_features_boston]
+X_test_corr_boston = X_test_boston[top_correlated_features_boston]
+reg_corr = LinearRegression()
+reg_corr.fit(X_train_corr_boston, y_train_boston)
+
+# Evaluate the regressory_pred_corr_boston = reg_corr.predict(X_test_corr_boston)
+rmse_corr = sqrt(mean_squared_error(y_test_boston, y_pred_corr_boston))
+
+# Results
+top_correlated_features_boston, rmse_corr

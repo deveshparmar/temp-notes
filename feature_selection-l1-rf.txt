@@ -1,0 +1,123 @@
+from sklearn.feature_selection import SelectKBest, mutual_info_regression
+from sklearn.linear_model import LinearRegression
+from sklearn.model_selection import train_test_split 
+from sklearn.metrics import mean_squared_error
+
+
+# Split the data into training and testing sets
+X = financial_distress_data.drop(columns=['Financial Distress', 'Company', 'Time'])
+y = financial_distress_data['Financial Distress']
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Use SelectKBest for univariate feature selection
+k_best_features = 10  
+
+# for demonstration purposes, we're selecting the top 10 features
+selector = SelectKBest(score_func=mutual_info_regression, k=k_best_features)
+X_train_selected = selector.fit_transform(X_train, y_train)
+X_test_selected = selector.transform(X_test)
+
+# Train a linear regression model using all features
+model_all_features = LinearRegression()
+model_all_features.fit(X_train, y_train)
+y_pred_all = model_all_features.predict(X_test)
+mse_all_features = mean_squared_error(y_test, y_pred_all)
+
+# Train a linear regression model using only the selected features
+model_selected_features = LinearRegression()
+model_selected_features.fit(X_train_selected, y_train)
+y_pred_selected = model_selected_features.predict(X_test_selected)
+mse_selected_features = mean_squared_error(y_test, y_pred_selected)
+mse_all_features, mse_selected_features
+
+
+# RFE
+from sklearn.feature_selection import RFE
+
+# Use RFE for feature selection with the linear regression estimator
+estimator = LinearRegression()
+selector_rfe = RFE(estimator, n_features_to_select=k_best_features, step=1)
+X_train_rfe = selector_rfe.fit_transform(X_train, y_train)
+X_test_rfe = selector_rfe.transform(X_test)
+
+# Train a linear regression model using features selected by RFE
+model_rfe_features = LinearRegression()
+model_rfe_features.fit(X_train_rfe, y_train)
+y_pred_rfe = model_rfe_features.predict(X_test_rfe)
+mse_rfe_features = mean_squared_error(y_test, y_pred_rfe)
+mse_rfe_features
+
+
+# LASSO
+
+from sklearn.linear_model import Lasso
+
+# Use Lasso for feature selection
+alpha_value = 0.01  
+
+# Regularization strength; higher values mean fewer features will be selected
+lasso = Lasso(alpha=alpha_value)
+lasso.fit(X_train, y_train)
+
+# Get the selected features based on non-zero coefficients
+selected_features_mask = lasso.coef_ != 0
+
+X_train_lasso = X_train.iloc[:, selected_features_mask]
+X_test_lasso = X_test.iloc[:, selected_features_mask]
+
+# Train a linear regression model using features selected by Lasso
+model_lasso_features = LinearRegression()
+model_lasso_features.fit(X_train_lasso, y_train)
+y_pred_lasso = model_lasso_features.predict(X_test_lasso)
+mse_lasso_features = mean_squared_error(y_test, y_pred_lasso)
+mse_lasso_features
+
+#XG Boost
+
+from sklearn.ensemble import RandomForestRegressor
+
+# Train a RandomForestRegressor to get feature importances
+rf = RandomForestRegressor(n_estimators=100, random_state=42)
+rf.fit(X_train, y_train)
+
+# Get the top k feature importances
+importances = rf.feature_importances_
+indices = importances.argsort()[-k_best_features:][::-1]
+X_train_rf = X_train.iloc[:, indices]
+X_test_rf = X_test.iloc[:, indices]
+
+# Train a linear regression model using features selected by Random Forest
+model_rf_features = LinearRegression()
+model_rf_features.fit(X_train_rf, y_train)
+y_pred_rf = model_rf_features.predict(X_test_rf)
+mse_rf_features = mean_squared_error(y_test, y_pred_rf)
+mse_rf_features
+model_rf_features = LinearRegression()\
+model_rf_features.fit(X_train_rf, y_train)
+y_pred_rf = model_rf_features.predict(X_test_rf)
+mse_rf_features = mean_squared_error(y_test, y_pred_rf)
+mse_rf_features
+
+from sklearn.metrics import mean_absolute_error, r2_score
+
+# Compute additional metrics for all features
+mae_all_features = mean_absolute_error(y_test, y_pred_all)
+r2_all_features = r2_score(y_test, y_pred_all)
+
+# Compute additional metrics for univariate feature selection
+mae_selected_features = mean_absolute_error(y_test, y_pred_selected)
+r2_selected_features = r2_score(y_test, y_pred_selected)
+
+# Compute additional metrics for RFE
+mae_rfe_features = mean_absolute_error(y_test, y_pred_rfe)
+r2_rfe_features = r2_score(y_test, y_pred_rfe)
+
+# Compute additional metrics for Lasso
+mae_lasso_features = mean_absolute_error(y_test, y_pred_lasso)
+r2_lasso_features = r2_score(y_test, y_pred_lasso)
+
+# Compute additional metrics for Random Forest
+mae_rf_features = mean_absolute_error(y_test, y_pred_rf)
+r2_rf_features = r2_score(y_test, y_pred_rf)
+results = {'Method': ['All Features', 'Univariate', 'RFE', 'Lasso', 'Random Forest'],'MSE': [mse_all_features, mse_selected_features, mse_rfe_features, mse_lasso_features, mse_rf_features],'MAE': [mae_all_features, mae_selected_features, mae_rfe_features, mae_lasso_features, mae_rf_features],'R^2 Score': [r2_all_features, r2_selected_features, r2_rfe_features, r2_lasso_features, r2_rf_features]}
+evaluation_df = pd.DataFrame(results)evaluation_df
